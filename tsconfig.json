@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "ES2025",                          /* Target JavaScript version */
+    "module": "NodeNext",                        /* Modern module resolution */
+    "rootDir": "./src",                          /* Locate source files here */
+    "outDir": "./dist",                          /* Send compiled code here */
+    "strict": true,                              /* Enable all strict type-checking options */
+    "esModuleInterop": true,                     /* Enables emit interoperability */
+    "skipLibCheck": true,                        /* Skip type checking of declaration files */
+    "types": ["node"]
+  },
+  "include": ["src/**/*"],                       /* Files to compile */
+  "exclude": ["node_modules", "**/*.spec.ts"]    /* Files to ignore */
+}
