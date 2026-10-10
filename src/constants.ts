@@ -47,3 +47,4 @@ export const MAX_OBJECT_FIELDS_TO_DISPLAY:number = 10;
 export const MAX_SHOW_OBJECT_RECURSION:number = 10;
 export const MAX_HEADERS_TO_DISPLAY:number = 10;
 export const MAX_BODY_LENGTH_TO_DISPLAY:number = 500;
+export const UNUSED_FILE_DESCRIPTOR: number = -1;

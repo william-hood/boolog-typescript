@@ -26,9 +26,11 @@ import {
     ALREADY_CONCLUDED_MESSAGE,
     EMOJI_BOOLOG,
     EMOJI_TEXT_BOOLOG_CONCLUDE,
+    UNUSED_FILE_DESCRIPTOR,
 } from "./constants"
 
-const fs = require('fs');
+import * as fs from 'node:fs'
+import { format } from 'date-fns';
 
 const STARTING_CONTENT:string = "<table class=\"left_justified\">\r\n";
 
@@ -48,9 +50,8 @@ class BoologConcludedError extends Error {
 
 class Boolog {
     title:string;
-    echoToConsole:boolean;
-    pathForPlainText: string;
-    pathForHTML:string;
+    fileDescriptorForPlainText: number;
+    fileDescriptorForHTML: number;
     showTimestamps:boolean;
     showEmojis:boolean;
     theme:string;
@@ -60,9 +61,12 @@ class Boolog {
     isConcluded:boolean = false;
     firstEcho:boolean = true;
 
+    dateFormatter:string = "yyyy-MM-dd";
+    timeFormatter:string = "HH:mm:ss.SSS";
+
+
     constructor(
         title:string = UNKNOWN,
-        echoToConsole:boolean = true,
         pathForPlainText: string = "",
         pathForHTML:string = "",
         showTimestamps:boolean = true,
@@ -71,16 +75,26 @@ class Boolog {
         headerFunction: (title:string)=>string = defaultHeader,
     ) {
         this.title = title;
-        this.echoToConsole = echoToConsole;
-        this.pathForPlainText = pathForPlainText;
-        this.pathForHTML = pathForHTML;
+
+        if (pathForPlainText == "") {
+            this.fileDescriptorForPlainText = process.stdout.fd;
+        } else {
+            this.fileDescriptorForPlainText = fs.openSync(pathForPlainText, 'a');
+        }
+        
+        if (pathForHTML == "") {
+            this.fileDescriptorForHTML = UNUSED_FILE_DESCRIPTOR;
+        } else {
+            this.fileDescriptorForHTML = fs.openSync(pathForHTML, 'w');
+        }
+        
         this.showTimestamps = showTimestamps;
         this.showEmojis = showEmojis;
         this.theme = theme;
         this.headerFunction = headerFunction;
 
         this.content.push(STARTING_CONTENT);
-        if (this.pathForHTML.length) {
+        if (this.fileDescriptorForHTML != UNUSED_FILE_DESCRIPTOR) {
             this.printToHTMLFile("<html>\r\n<meta charset=\"UTF-8\">\r\n<head>\r\n<title>$title</title>\r\n");
             this.printToHTMLFile(theme);
             this.printToHTMLFile("</head>\r\n<body>\r\n");
@@ -96,13 +110,21 @@ class Boolog {
         this.content.push("<tr>");
 
         if (this.showTimestamps) {
-            // TODO
+            let formattedDate = format(timestamp, this.dateFormatter);
+            let formattedTime = format(timestamp, this.timeFormatter);
+            this.content.push(`<td class="min"><small>${formattedDate}</small></td><td>&nbsp;</td><td class="min"><small>${formattedTime}</small></td><td>&nbsp;</td>`);
         }
 
+        if (this.showEmojis) {
+            this.content.push(`<td><h2>${emoji}</h2></td>`);
+        }
+
+        this.content.push(`<td>${message}</td></tr>`);
+        this.content.push("\r\n");
     }
 
     private printToHTMLFile(message:string) {
-        fs.appendFileSync(this.pathForHTML, message, "utf-8");
+        fs.appendFileSync(this.fileDescriptorForHTML, message, "utf-8");
     }
 
     echoPlainText(message:string, emoji:string = EMOJI_TEXT_BLANK_LINE, timestamp:Date = new Date()): void {
@@ -113,27 +135,36 @@ class Boolog {
         if (this.firstEcho) {
             this.firstEcho = false;
             this.echoPlainText("", EMOJI_TEXT_BLANK_LINE, timestamp);
-            this.echoPlainText(this.title, EMOJI_BOOLOG, timestamp)
+            this.echoPlainText(this.title, EMOJI_BOOLOG, timestamp);
         }
 
         if (this.showTimestamps) {
-            // TODO
+            let formattedDate = format(timestamp, this.dateFormatter);
+            let formattedTime = format(timestamp, this.timeFormatter);
+            this.printToTextOutput(formattedDate);
+            this.printToTextOutput("\t");
+            this.printToTextOutput(formattedTime);
+            this.printToTextOutput("\t");
         }
 
         if (this.showEmojis) {
-            this.printToTextOutput(`${emoji}\t`);
+            this.printToTextOutput(emoji);
+            this.printToTextOutput("\t");
+        }
+
+        this.printToTextOutput(message);
+        this.printToTextOutput("\r\n");
+
+        try {
+            // flush
+            fs.fsyncSync(this.fileDescriptorForPlainText);
+        } catch {
+            // Deliberate NO-OP
         }
     }
 
     private printToTextOutput(message:string) {
-        if (this.pathForPlainText.length > 0) {
-            fs.appendFileSync(this.pathForPlainText, message, "utf-8");
-        }
-
-        if (this.echoToConsole) {
-            process.stdout.write(message);
-            // TODO: Flush the stream?
-        }
+            fs.appendFileSync(this.fileDescriptorForPlainText, message, "utf-8");
     }
 
     wasUsed(): boolean {
@@ -145,6 +176,8 @@ class Boolog {
     }
 
     conclude(): string {
+        let result: string = this.content.join("");
+
         if (! this.isConcluded) {
             this.echoPlainText("", EMOJI_TEXT_BOOLOG_CONCLUDE)
             this.echoPlainText("");
@@ -153,12 +186,33 @@ class Boolog {
 
             this.content.push("\r\n</table>");
 
-            if (this.pathForHTML != null) {
-                this.printToHTMLFile(this.content.join(""))
-                this.printToHTMLFile("\r\n</body>\r\n</html>")
-                printWriter_HTML.flush()
-                printWriter_HTML.close()
+            if (this.fileDescriptorForHTML != UNUSED_FILE_DESCRIPTOR) {
+                this.printToHTMLFile(result);
+                this.printToHTMLFile("\r\n</body>\r\n</html>");
+                
+                try {
+                    // flush
+                    fs.fsyncSync(this.fileDescriptorForHTML);
+                } finally {
+                    // close
+                    fs.closeSync(this.fileDescriptorForHTML);
+                    this.fileDescriptorForHTML = UNUSED_FILE_DESCRIPTOR
+                }
+
+            }
+
+            if ((this.fileDescriptorForPlainText != process.stdout.fd) && (this.fileDescriptorForPlainText != UNUSED_FILE_DESCRIPTOR)) {
+                try {
+                    // flush
+                    fs.fsyncSync(this.fileDescriptorForPlainText);
+                } finally {
+                    // close
+                    fs.closeSync(this.fileDescriptorForPlainText);
+                    this.fileDescriptorForPlainText = UNUSED_FILE_DESCRIPTOR
+                }
             }
         }
+
+        return result;
     }
 }
