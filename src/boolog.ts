@@ -27,6 +27,8 @@ import {
     EMOJI_BOOLOG,
     EMOJI_TEXT_BOOLOG_CONCLUDE,
     UNUSED_FILE_DESCRIPTOR,
+    EMOJI_DEBUG,
+    EMOJI_ERROR,
 } from "./constants"
 
 import * as fs from 'node:fs'
@@ -211,6 +213,62 @@ class Boolog {
                     this.fileDescriptorForPlainText = UNUSED_FILE_DESCRIPTOR
                 }
             }
+        }
+
+        return result;
+    }
+
+    info(message:string, emoji:string = EMOJI_TEXT_BLANK_LINE) {
+        let timestamp = new Date();
+        this.writeToHTML(message, emoji, timestamp);
+        this.echoPlainText(message, emoji, timestamp);
+    }
+
+    debug(message:string) {
+        let timestamp = new Date();
+        this.writeToHTML(message, EMOJI_DEBUG, timestamp);
+        this.echoPlainText(message, EMOJI_DEBUG, timestamp);
+    }
+
+    error(message:string) {
+        let timestamp = new Date();
+        this.writeToHTML(message, EMOJI_ERROR, timestamp);
+        this.echoPlainText(message, EMOJI_ERROR, timestamp);
+    }
+
+    skipLine() {
+        this.writeToHTML("");
+        this.echoPlainText("");
+    }
+
+    wrapAsSubordinate(boologTitle:string, boologContent:string, style:string = "neutral"): string {
+        let identifier:string = crypto.randomUUID();
+
+        let result:string[] = [];
+        result.push("\r\n\r\n<div class=\"boolog ");
+        result.push(style);
+        result.push("\">\r\n<label for=\"");
+        result.push(identifier);
+        result.push("\">\r\n<input id=\"");
+        result.push(identifier);
+        result.push("\" class=\"gone\" type=\"checkbox\">\r\n<h2>");
+        result.push(boologTitle);
+        result.push("</h2>\r\n<div class=\"");
+        result.push(this.getEncapsulationTag());
+        result.push("\">\r\n");
+        result.push(boologContent);
+        result.push("\r\n</div></label></div>");
+
+        return result.join("");
+    }
+
+    showBoolog(subordinate:Boolog, emoji:string = EMOJI_BOOLOG, style:string = "neutral", resurseLevel:number = 0):string {
+        let timestamp = new Date();
+        let subordinateContent = subordinate.conclude();
+        let result = this.wrapAsSubordinate(subordinate.title, subordinateContent, style)
+
+        if (resurseLevel < 1) {
+            this.writeToHTML(result, emoji, timestamp);
         }
 
         return result;
