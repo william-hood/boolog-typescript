@@ -9,6 +9,6 @@
     "skipLibCheck": true,                        /* Skip type checking of declaration files */
     "types": ["node"]
   },
-  "include": ["src/**/*"],                       /* Files to compile */
+  "include": ["src/**/*"],         /* Files to compile */
   "exclude": ["node_modules", "**/*.spec.ts"]    /* Files to ignore */
 }

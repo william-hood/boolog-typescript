@@ -19,6 +19,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 // OTHER DEALINGS IN THE SOFTWARE.
 
+import * as path from 'path';
 import { THEME_LIGHT } from "./theme-light";
 
 export const EMOJI_SETUP:string = "🛠";
@@ -48,3 +49,4 @@ export const MAX_SHOW_OBJECT_RECURSION:number = 10;
 export const MAX_HEADERS_TO_DISPLAY:number = 10;
 export const MAX_BODY_LENGTH_TO_DISPLAY:number = 500;
 export const UNUSED_FILE_DESCRIPTOR: number = -1;
+export const FILE_SEPARATOR = path.sep;

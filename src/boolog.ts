@@ -50,7 +50,7 @@ class BoologConcludedError extends Error {
     }
 }
 
-class Boolog {
+export class Boolog {
     title:string;
     fileDescriptorForPlainText: number;
     fileDescriptorForHTML: number;
