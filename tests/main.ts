@@ -61,7 +61,7 @@ function main(): void {
         log.info("All of the above messages represent \"normal\" log output with the .info() function.");
         log.info("When debugging a program, you might need a single line of information to stand out.");
         log.info("If you use the .debug() function instead of .info() the message will be highlighted in yellow like this...");
-        log.debug("Boolog is the integrated log system for the Koarse Grind test framework.");
+        log.debug("The Kotlin version of Boolog is the integrated log system for the Koarse Grind test framework.");
         log.info("Similar to that is the .error() function. The only difference is an icon in the log identifying the line as an error...");
         log.error("Uh-oh... That wasn't supposed to happen!");
         log.skipLine();
