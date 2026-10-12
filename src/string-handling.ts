@@ -20,13 +20,13 @@
 // OTHER DEALINGS IN THE SOFTWARE.
 
 
-function treatAsCode(value:string): string {
+export function treatAsCode(value:string): string {
     return "<pre><code><xmp>$value</xmp></code></pre>";
 }
 
 
 
-function processString(fieldName:string, fieldValue:string, callbackFunction: ((fieldName:string, fieldValue:string)=>string) | undefined): String {
+export function processString(fieldName:string, fieldValue:string, callbackFunction: ((fieldName:string, fieldValue:string)=>string) | undefined): string {
     var result = fieldValue; // Copied by value
 
     if (callbackFunction === undefined) {

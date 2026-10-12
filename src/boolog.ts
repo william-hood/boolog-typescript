@@ -44,7 +44,7 @@ function defaultHeader(title:string):string {
     return result.join("");
 }
 
-function highlight(message:string, style:string = "highlighted"):string {
+export function highlight(message:string, style:string = "highlighted"):string {
     let result:string[] = [];
     result.push("<p class=\"$style outlined\">&nbsp;");
     result.push(message);
