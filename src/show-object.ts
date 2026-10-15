@@ -34,7 +34,7 @@ Boolog.prototype.showObject = function(this:Boolog, target:any, targetVariableNa
     }
 
     if (target == null) {
-        return highlight("(Object is Null)")
+        return highlight("(Object is Null)");
     }
 
     if (target === undefined) {
